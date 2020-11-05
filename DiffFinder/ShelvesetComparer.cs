@@ -1,5 +1,6 @@
 ﻿// <copyright file="SelectShelvesetTeamExplorerView.xaml.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
+using Microsoft.TeamFoundation.Controls;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -15,7 +16,8 @@ namespace DiffFinder
         /// <summary>
         /// Command ID.
         /// </summary>
-        public const int CommandId = 0x0100;
+        public const int ShelvesetComparerResuldId = 0x0100;
+        public const int ShelvesetComparerTeamExplorerViewId = 0x0200;
 
         /// <summary>
         /// Command menu group (command set GUID).
@@ -44,8 +46,12 @@ namespace DiffFinder
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                var menuCommandID = new CommandID(CommandSet, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+                var menuCommandID = new CommandID(CommandSet, ShelvesetComparerResuldId);
+                var menuItem = new MenuCommand(this.ShelvesetComparerResuldIdMenuItemCallback, menuCommandID);
+                commandService.AddCommand(menuItem);
+
+                menuCommandID = new CommandID(CommandSet, ShelvesetComparerTeamExplorerViewId);
+                menuItem = new MenuCommand(this.ShelvesetComparerTeamExplorerViewIdMenuItemCallback, menuCommandID);
                 commandService.AddCommand(menuItem);
             }
         }
@@ -86,7 +92,7 @@ namespace DiffFinder
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+        private void ShelvesetComparerResuldIdMenuItemCallback(object sender, EventArgs e)
         {
             this.ShowToolWindow(sender, e);
         }
@@ -106,6 +112,39 @@ namespace DiffFinder
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             windowFrame.Show();
+        }
+
+        /// <summary>
+        /// This function is the callback used to execute the command when the menu item is clicked.
+        /// See the constructor to see how the menu item is associated with this function using
+        /// OleMenuCommandService service and MenuCommand class.
+        /// </summary>
+        /// <param name="sender">Event sender.</param>
+        /// <param name="e">Event args.</param>
+        private void ShelvesetComparerTeamExplorerViewIdMenuItemCallback(object sender, EventArgs e)
+        {
+            try
+            {
+                ITeamExplorer teamExplorer = GetService<ITeamExplorer>();
+                if (teamExplorer != null)
+                {
+                    teamExplorer.NavigateToPage(new Guid(ShelvesetComparerPage.PageId), null);
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.ShowNotification(ex.Message, NotificationType.Error);
+            }
+        }
+
+        public T GetService<T>()
+        {
+            if (this.ServiceProvider != null)
+            {
+                return (T)this.ServiceProvider.GetService(typeof(T));
+            }
+
+            return default(T);
         }
     }
 }
